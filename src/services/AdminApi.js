@@ -6,7 +6,7 @@ import axiosIns from "./axiosConfig";
  */
 export async function getAllUsers() {
   try {
-    const response = await axiosIns.get("/gloubeOut/admin/allUsers");
+    const response = await axiosIns.get("/admin/allUsers");
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -25,9 +25,7 @@ export async function getAllUsers() {
  */
 export async function getAllTravelAgencyRequests() {
   try {
-    const response = await axiosIns.get(
-      "/gloubeOut/admin/AllTravelAgenciesRequests"
-    );
+    const response = await axiosIns.get("/admin/AllTravelAgenciesRequests");
 
     return response.data.$values;
   } catch (error) {
@@ -49,7 +47,7 @@ export async function getAllTravelAgencyRequests() {
  */
 export async function getAllTravelAgencies() {
   try {
-    const response = await axiosIns.get("/gloubeOut/admin/AllTravelAgencies");
+    const response = await axiosIns.get("/admin/AllTravelAgencies");
     return response.data.$values;
   } catch (error) {
     if (error.response) {
@@ -71,10 +69,7 @@ export async function getAllTravelAgencies() {
  */
 export async function addTravelAgency(agencyData) {
   try {
-    const response = await axiosIns.post(
-      "/gloubeOut/admin/AddTravelAgency",
-      agencyData
-    );
+    const response = await axiosIns.post("/admin/AddTravelAgency", agencyData);
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -98,9 +93,7 @@ export async function addTravelAgency(agencyData) {
  */
 export async function deleteTravelAgency(id) {
   try {
-    const response = await axiosIns.delete(
-      `/gloubeOut/admin/deletetravelagency/${id}`
-    );
+    const response = await axiosIns.delete(`/admin/deletetravelagency/${id}`);
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -126,7 +119,7 @@ export async function deleteTravelAgency(id) {
 export async function updateTravelAgency(id, agencyData) {
   try {
     const response = await axiosIns.patch(
-      `/gloubeOut/admin/updateTravelAgency/${id}`,
+      `/admin/updateTravelAgency/${id}`,
       agencyData
     );
     return response.data;
@@ -154,9 +147,7 @@ export async function updateTravelAgency(id, agencyData) {
  */
 export async function getTravelAgency(id) {
   try {
-    const response = await axiosIns.get(
-      `/gloubeOut/admin/getTravelAgency/${id}`
-    );
+    const response = await axiosIns.get(`/admin/getTravelAgency/${id}`);
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -182,7 +173,7 @@ export async function getTravelAgency(id) {
 export async function handleTravelAgencyRequest(id, requestData) {
   try {
     const response = await axiosIns.patch(
-      `/gloubeOut/admin/handleTArequests/${id}`,
+      `/admin/handleTArequests/${id}`,
       requestData
     );
     return response.data;
@@ -209,7 +200,7 @@ export async function handleTravelAgencyRequest(id, requestData) {
  */
 export async function getAllCategories() {
   try {
-    const response = await axiosIns.get("/gloubeOut/admin/getAllCategories");
+    const response = await axiosIns.get("/admin/getAllCategories");
     return response.data.$values;
   } catch (error) {
     if (error.response) {
@@ -231,10 +222,7 @@ export async function getAllCategories() {
  */
 export async function addCategory(categoryData) {
   try {
-    const response = await axiosIns.post(
-      "/gloubeOut/admin/addCategory",
-      categoryData
-    );
+    const response = await axiosIns.post("/admin/addCategory", categoryData);
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -258,9 +246,7 @@ export async function addCategory(categoryData) {
  */
 export async function deleteCategory(id) {
   try {
-    const response = await axiosIns.delete(
-      `/gloubeOut/admin/deleteCategory/${id}`
-    );
+    const response = await axiosIns.delete(`/admin/deleteCategory/${id}`);
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -285,7 +271,7 @@ export async function deleteCategory(id) {
 export async function updateCategory(id, categoryData) {
   try {
     const response = await axiosIns.post(
-      `/gloubeOut/admin/updateCategory/${id}`,
+      `/admin/updateCategory/${id}`,
       categoryData
     );
     return response.data;
