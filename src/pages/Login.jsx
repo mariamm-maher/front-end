@@ -6,6 +6,7 @@ import { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 import toast from "react-hot-toast";
 import { testTokenDecode } from "../utils/tokenHelper";
+import { displayAuthError } from "../utils/authUtils";
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -40,10 +41,14 @@ const LoginPage = () => {
     }
 
     console.log("Attempting login with:", email);
+
     // Use the login function from context
     login({
       email,
       password,
+    }).catch((error) => {
+      // Use our utility function to display the appropriate error message
+      displayAuthError(error, toast);
     });
 
     // No need to reset fields here as the page will redirect on successful login
@@ -98,7 +103,6 @@ const LoginPage = () => {
                   />
                 </div>
               </motion.div>
-
               {/* Password */}
               <motion.div
                 initial={{ x: -20, opacity: 0 }}
@@ -147,8 +151,7 @@ const LoginPage = () => {
                     Forgot password?
                   </Link>
                 </div>
-              </motion.div>
-
+              </motion.div>{" "}
               {/* Submit */}
               <motion.button
                 type="submit"
@@ -166,6 +169,23 @@ const LoginPage = () => {
               >
                 {isLoggingIn ? "Logging in..." : "Log in"}
               </motion.button>
+              {/* Account Status Help Text */}
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="text-center text-xs text-white/60 mt-3"
+              >
+                If you can't log in, your account may be pending approval or
+                suspended.
+                <br />
+                <Link
+                  to="/contact-us"
+                  className="text-[#1784ad] hover:text-emerald-200 transition-colors"
+                >
+                  Contact support for assistance
+                </Link>
+              </motion.p>
             </form>
 
             {/* Footer */}

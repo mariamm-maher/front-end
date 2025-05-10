@@ -16,8 +16,10 @@ export async function loginUser({ email, password }) {
       // Server responded with a status (like 400, 401, etc.)
       if (error.response.status === 404)
         throw new Error("Email Or Password is not correct !");
-      if (error.response.status === 403)
-        throw new Error("Access denied. Your account may be suspended.");
+      if (error.response.status === 401)
+        throw new Error(
+          "Your account is currently suspended or pending approval. Please contact support."
+        );
       if (error.response.status === 500)
         throw new Error("Server error. Please try again later.");
     }
@@ -93,8 +95,12 @@ export async function travelAgencySignUp({
   country,
   contact,
   profilePicture,
-  address = "", // Default to empty string
-  website = "", // Default to empty string
+  // We're keeping these parameters but not using them directly
+  // They're included here for API compatibility
+  // eslint-disable-next-line no-unused-vars
+  address = "",
+  // eslint-disable-next-line no-unused-vars
+  website = "",
 }) {
   try {
     let profilePhotoUrl = "";
@@ -153,15 +159,19 @@ export async function travelAgencySignUp({
     );
     return response.data;
   } catch (error) {
-    console.error("Travel agency signup error:", error);
-
-    // Detailed error logging
+    console.error("Travel agency signup error:", error); // Detailed error logging
     if (error.response) {
       console.error(
         `Status: ${error.response.status}, Message: ${error.response.statusText}`
       );
       console.error("Response data:", error.response.data);
 
+      if (error.response.status === 404) {
+        console.error("API endpoint not found: /auth/register/travelAgency");
+        throw new Error(
+          "Registration endpoint not found. Please contact support or try again later."
+        );
+      }
       if (error.response.status === 400)
         throw new Error("Email Already Exists");
       if (error.response.status === 409)

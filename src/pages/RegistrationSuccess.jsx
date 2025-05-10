@@ -50,16 +50,6 @@ const RegistrationSuccess = () => {
               </p>
             </motion.div>
 
-            <motion.p
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="text-white/70 mb-8"
-            >
-              You'll receive an email notification once your account has been
-              approved.
-            </motion.p>
-
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}

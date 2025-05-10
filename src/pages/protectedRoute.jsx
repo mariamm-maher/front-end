@@ -59,13 +59,13 @@ export const RoleProtectedRoute = ({ allowedRoles }) => {
     );
 
     // Redirect to appropriate dashboard based on role
-    if (user.role === "Tourist") {
+    if (user.userRole === "Tourist") {
       console.log("Redirecting Tourist to /home");
       return <Navigate to="/home" replace />;
-    } else if (user.role === "TravelAgency") {
+    } else if (user.userRole === "TravelAgency") {
       console.log("Redirecting TravelAgency to /travelAgencyDashboard");
       return <Navigate to="/travelAgencyDashboard" replace />;
-    } else if (user.role === "Admin") {
+    } else if (user.userRole === "Admin") {
       console.log("Redirecting Admin to /admin");
       return <Navigate to="/admin" replace />;
     } else {
