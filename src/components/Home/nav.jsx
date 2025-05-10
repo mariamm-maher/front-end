@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiHeart,
@@ -9,7 +9,9 @@ import {
 } from "react-icons/fi";
 import { HiOutlineBookmark } from "react-icons/hi";
 import logo from "../../assets/logo.png";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
+import { getUserProfile } from "../../services/userApi";
 
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,6 +19,43 @@ const NavBar = () => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [wishlistCount, setWishlistCount] = useState(3); // Example count
   const [isWishlistHovered, setIsWishlistHovered] = useState(false);
+  const [profileData, setProfileData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  // Check for authentication and fetch user profile
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      setIsAuthenticated(true);
+      fetchUserProfile();
+    } else {
+      setIsAuthenticated(false);
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Function to fetch user profile data
+  const fetchUserProfile = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getUserProfile();
+      setProfileData(data.value);
+      console.log("User profile loaded:", data.value);
+    } catch (error) {
+      console.error("Error loading user profile:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    logout();
+    setShowUserDropdown(false);
+  };
 
   const navLinks = [
     { name: "Home", path: "/home" },
@@ -121,116 +160,144 @@ const NavBar = () => {
         className="hidden md:flex items-center gap-4"
       >
         {/* Wishlist Button */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onHoverStart={() => setIsWishlistHovered(true)}
-          onHoverEnd={() => setIsWishlistHovered(false)}
-          className="relative p-2 text-gray-300 hover:text-[#ff6b6b] transition-colors duration-300"
-        >
-          <FiHeart className="w-5 h-5" />
-          {wishlistCount > 0 && (
-            <motion.span
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="absolute -top-1 -right-1 bg-[#ff6b6b] text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
-            >
-              {wishlistCount}
-            </motion.span>
-          )}
-          <AnimatePresence>
-            {isWishlistHovered && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                className="absolute top-full right-0 mt-2 bg-gray-800 text-white text-sm px-3 py-1 rounded whitespace-nowrap shadow-lg border border-gray-700"
-              >
-                Your favourites
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.button>
-
-        {/* Auth Buttons */}
-        <motion.button
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          className="text-gray-300 hover:text-[#1784ad] font-medium px-4 py-2 rounded-md transition-all duration-300 hover:bg-gray-700/30 border border-gray-600 hover:border-[#1784ad]"
-        >
-          Login
-        </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          className="bg-gradient-to-r from-[#1784ad] to-teal-500 hover:from-[#1784ad]/90 hover:to-teal-500/90 text-white font-medium px-5 py-2 rounded-md transition-all duration-300 shadow-lg hover:shadow-[#1784ad]/40"
-        >
-          Sign Up
-        </motion.button>
-
-        {/* Profile Dropdown */}
-        <div className="relative">
+        {isAuthenticated && (
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => setShowUserDropdown(!showUserDropdown)}
-            className="flex items-center gap-2 text-gray-300 hover:text-white p-2 rounded-full hover:bg-gray-700/50 transition-all"
+            onHoverStart={() => setIsWishlistHovered(true)}
+            onHoverEnd={() => setIsWishlistHovered(false)}
+            className="relative p-2 text-gray-300 hover:text-[#ff6b6b] transition-colors duration-300"
           >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1784ad] to-teal-400 flex items-center justify-center overflow-hidden shadow-inner">
-              <FiUser className="w-4 h-4 text-white" />
-            </div>
-          </motion.button>
-
-          {/* Dropdown Menu */}
-          <AnimatePresence>
-            {showUserDropdown && (
-              <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-md shadow-2xl py-1 z-50 border border-gray-700/50 overflow-hidden"
+            <FiHeart className="w-5 h-5" />
+            {wishlistCount > 0 && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-1 -right-1 bg-[#ff6b6b] text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
               >
-                <div className="px-4 py-3 border-b border-gray-700/50">
-                  <p className="text-sm font-medium text-white">John Doe</p>
-                  <p className="text-xs text-gray-400">john@example.com</p>
-                </div>
-                <Link
-                  to="/profile"
-                  className="flex items-center px-4 py-3 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
-                >
-                  <FiUser className="mr-3" /> Profile
-                </Link>
-                <Link
-                  to="/bookings"
-                  className="flex items-center px-4 py-3 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
-                >
-                  <FiCalendar className="mr-3" /> My Bookings
-                </Link>
-                <Link
-                  to="/wishlist"
-                  className="flex items-center px-4 py-3 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
-                >
-                  <HiOutlineBookmark className="mr-3" /> Wishlist
-                  {wishlistCount > 0 && (
-                    <span className="ml-auto bg-[#ff6b6b] text-white text-xs font-bold rounded-full px-2 py-0.5">
-                      {wishlistCount}
-                    </span>
-                  )}
-                </Link>
-                <Link
-                  to="/settings"
-                  className="flex items-center px-4 py-3 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
-                >
-                  <FiSettings className="mr-3" /> Settings
-                </Link>
-                <div className="border-t border-gray-700/50 my-1"></div>
-                <button className="flex items-center w-full px-4 py-3 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-red-400 transition-colors">
-                  <FiLogOut className="mr-3" /> Logout
-                </button>
-              </motion.div>
+                {wishlistCount}
+              </motion.span>
             )}
-          </AnimatePresence>
-        </div>
+            <AnimatePresence>
+              {isWishlistHovered && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute top-full right-0 mt-2 bg-gray-800 text-white text-sm px-3 py-1 rounded whitespace-nowrap shadow-lg border border-gray-700"
+                >
+                  Your favourites
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.button>
+        )}
+
+        {/* Auth Buttons or Profile */}
+        {!isAuthenticated ? (
+          <>
+            <Link to="/login">
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="text-gray-300 hover:text-[#1784ad] font-medium px-4 py-2 rounded-md transition-all duration-300 hover:bg-gray-700/30 border border-gray-600 hover:border-[#1784ad]"
+              >
+                Login
+              </motion.button>
+            </Link>
+            <Link to="/TouristSignUp">
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="bg-gradient-to-r from-[#1784ad] to-teal-500 hover:from-[#1784ad]/90 hover:to-teal-500/90 text-white font-medium px-5 py-2 rounded-md transition-all duration-300 shadow-lg hover:shadow-[#1784ad]/40"
+              >
+                Sign Up
+              </motion.button>
+            </Link>
+          </>
+        ) : (
+          <div className="relative">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowUserDropdown(!showUserDropdown)}
+              className="flex items-center gap-2 text-gray-300 hover:text-white p-2 rounded-full hover:bg-gray-700/50 transition-all"
+            >
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1784ad] to-teal-400 flex items-center justify-center overflow-hidden shadow-inner">
+                {profileData?.profilePicture ? (
+                  <img
+                    src={profileData.profilePicture}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <FiUser className="w-4 h-4 text-white" />
+                )}
+              </div>
+            </motion.button>
+
+            {/* Dropdown Menu */}
+            <AnimatePresence>
+              {showUserDropdown && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-md shadow-2xl py-1 z-50 border border-gray-700/50 overflow-hidden"
+                >
+                  <div className="px-4 py-3 border-b border-gray-700/50">
+                    <p className="text-sm font-medium text-white">
+                      {profileData
+                        ? `${profileData.firstname || ""} ${
+                            profileData.lastName || ""
+                          }`
+                        : "Loading..."}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {profileData?.email || ""}
+                    </p>
+                  </div>
+                  <Link
+                    to="/profile"
+                    className="flex items-center px-4 py-3 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
+                  >
+                    <FiUser className="mr-3" /> Profile
+                  </Link>
+                  <Link
+                    to="/bookings"
+                    className="flex items-center px-4 py-3 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
+                  >
+                    <FiCalendar className="mr-3" /> My Bookings
+                  </Link>
+                  <Link
+                    to="/wishlist"
+                    className="flex items-center px-4 py-3 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
+                  >
+                    <HiOutlineBookmark className="mr-3" /> Wishlist
+                    {wishlistCount > 0 && (
+                      <span className="ml-auto bg-[#ff6b6b] text-white text-xs font-bold rounded-full px-2 py-0.5">
+                        {wishlistCount}
+                      </span>
+                    )}
+                  </Link>
+                  <Link
+                    to="/settings"
+                    className="flex items-center px-4 py-3 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
+                  >
+                    <FiSettings className="mr-3" /> Settings
+                  </Link>
+                  <div className="border-t border-gray-700/50 my-1"></div>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center w-full px-4 py-3 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-red-400 transition-colors"
+                  >
+                    <FiLogOut className="mr-3" /> Logout
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
       </motion.div>
 
       {/* Mobile Menu Content */}
@@ -263,33 +330,80 @@ const NavBar = () => {
             ))}
 
             <div className="flex flex-col gap-4 mt-8 w-64">
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                className="text-white font-medium px-6 py-3 rounded-md transition-all duration-300 hover:bg-gray-700/50 border border-[#1784ad]"
-              >
-                Login
-              </motion.button>
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                className="bg-gradient-to-r from-[#1784ad] to-teal-500 hover:from-[#1784ad]/90 hover:to-teal-500/90 text-white font-medium px-6 py-3 rounded-md transition-all duration-300 shadow-lg hover:shadow-[#1784ad]/40"
-              >
-                Sign Up
-              </motion.button>
+              {!isAuthenticated ? (
+                <>
+                  <Link to="/login" onClick={() => setIsOpen(false)}>
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      className="w-full text-white font-medium px-6 py-3 rounded-md transition-all duration-300 hover:bg-gray-700/50 border border-[#1784ad]"
+                    >
+                      Login
+                    </motion.button>
+                  </Link>
+                  <Link to="/TouristSignUp" onClick={() => setIsOpen(false)}>
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      className="w-full bg-gradient-to-r from-[#1784ad] to-teal-500 hover:from-[#1784ad]/90 hover:to-teal-500/90 text-white font-medium px-6 py-3 rounded-md transition-all duration-300 shadow-lg hover:shadow-[#1784ad]/40"
+                    >
+                      Sign Up
+                    </motion.button>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center space-x-3 mb-4 justify-center">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#1784ad] to-teal-400 flex items-center justify-center overflow-hidden shadow-inner">
+                      {profileData?.profilePicture ? (
+                        <img
+                          src={profileData.profilePicture}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <FiUser className="w-6 h-6 text-white" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm text-white">
+                        {!isLoading && profileData
+                          ? `${profileData.firstName || ""} ${
+                              profileData.lastName || ""
+                            }`
+                          : "Loading..."}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {profileData?.email || ""}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsOpen(false);
+                    }}
+                    className="flex items-center justify-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-red-400 transition-colors rounded-lg w-full"
+                  >
+                    <FiLogOut className="mr-2" /> Logout
+                  </button>
+                </>
+              )}
             </div>
 
             {/* Mobile Wishlist Button */}
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              className="mt-8 flex items-center gap-2 text-gray-300 hover:text-[#ff6b6b] px-4 py-2"
-            >
-              <FiHeart className="w-5 h-5" />
-              <span>Wishlist</span>
-              {wishlistCount > 0 && (
-                <span className="bg-[#ff6b6b] text-white text-xs font-bold rounded-full px-2 py-0.5">
-                  {wishlistCount}
-                </span>
-              )}
-            </motion.button>
+            {isAuthenticated && (
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                className="mt-4 flex items-center gap-2 text-gray-300 hover:text-[#ff6b6b] px-4 py-2"
+              >
+                <FiHeart className="w-5 h-5" />
+                <span>Wishlist</span>
+                {wishlistCount > 0 && (
+                  <span className="bg-[#ff6b6b] text-white text-xs font-bold rounded-full px-2 py-0.5">
+                    {wishlistCount}
+                  </span>
+                )}
+              </motion.button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
