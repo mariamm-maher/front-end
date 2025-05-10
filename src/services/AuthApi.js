@@ -91,161 +91,89 @@ export async function travelAgencySignUp({
   agencyName,
   city,
   country,
-  address,
   contact,
   profilePicture,
-  website,
+  address = "", // Default to empty string
+  website = "", // Default to empty string
 }) {
   try {
-    // If there's a profile picture, upload it to Cloudinary first
     let profilePhotoUrl = "";
     if (profilePicture && profilePicture instanceof File) {
-      profilePhotoUrl = await uploadProfilePhoto(profilePicture, email);
+      try {
+        console.log(
+          `Uploading profile photo: ${profilePicture.name}, Size: ${(
+            profilePicture.size / 1024
+          ).toFixed(2)} KB`
+        );
+        profilePhotoUrl = await uploadProfilePhoto(profilePicture, email);
+        console.log(
+          `[Auth API] Agency signup - Profile image uploaded to Cloudinary. URL: ${profilePhotoUrl}`
+        );
+      } catch (uploadError) {
+        console.error(
+          "Error uploading profile photo to Cloudinary:",
+          uploadError
+        );
+        throw new Error(
+          `Failed to upload profile photo: ${uploadError.message}`
+        );
+      }
+    } else {
       console.log(
-        `[Auth API] Agency signup - Profile image uploaded to Cloudinary. URL: ${profilePhotoUrl}`
+        "No profile photo provided or invalid file object:",
+        profilePicture
       );
-    } // Send registration data to the backend, including the photo URL
-    const response = await axiosIns.post("/gloubeOut/auth/register/agency", {
+    }
+
+    // Prepare the registration data
+    const registrationData = {
       email,
       password,
       role: "TravelAgency",
       agencyName,
       city,
       country,
-      address,
+      address: "", // Always send empty string
       contact,
       profilePicture: profilePhotoUrl, // Use the Cloudinary URL instead of the file
-      website,
-    });
+      website: "", // Always send empty string
+    };
+    console.log("Sending agency registration data:", registrationData);
+
+    // Send registration data to the backend - using consistent endpoint name with camelCase
+    const response = await axiosIns.post(
+      "/auth/register/travelAgency",
+      registrationData
+    );
 
     console.log(
-      `[Auth API] Agency signup completed. Profile picture URL sent to backend: ${profilePhotoUrl}`
+      `[Auth API] Agency signup completed. Response:`,
+      response.data,
+      `Profile picture URL sent to backend: ${profilePhotoUrl}`
     );
     return response.data;
   } catch (error) {
+    console.error("Travel agency signup error:", error);
+
+    // Detailed error logging
     if (error.response) {
+      console.error(
+        `Status: ${error.response.status}, Message: ${error.response.statusText}`
+      );
+      console.error("Response data:", error.response.data);
+
       if (error.response.status === 400)
         throw new Error("Email Already Exists");
       if (error.response.status === 409)
         throw new Error("This email is already registered.");
       if (error.response.status === 500)
         throw new Error("Server error. Please try again later.");
-    }
-    throw new Error("Something went wrong. Please try again.");
-  }
-}
-
-/**
- * Request a password reset email
- * @param {string} email - User's email address
- * @returns {Promise} Promise resolving to success message
- */
-export async function requestPasswordReset(email) {
-  try {
-    const response = await axiosIns.post("/auth/forgot-password", { email });
-    return response.data;
-  } catch (error) {
-    if (error.response) {
-      if (error.response.status === 404)
-        throw new Error("No account found with this email address.");
-      if (error.response.status === 429)
-        throw new Error("Too many reset attempts. Please try again later.");
-      if (error.response.status === 500)
-        throw new Error("Server error. Please try again later.");
-    }
-    throw new Error("Something went wrong. Please try again.");
-  }
-}
-
-/**
- * Reset password with token
- * @param {string} token - Password reset token from email
- * @param {string} newPassword - New password
- * @returns {Promise} Promise resolving to success message
- */
-export async function resetPassword(token, newPassword) {
-  try {
-    const response = await axiosIns.post("/auth/reset-password", {
-      token,
-      newPassword,
-    });
-    return response.data;
-  } catch (error) {
-    if (error.response) {
-      if (error.response.status === 400)
-        throw new Error("Invalid or expired reset token. Please try again.");
-      if (error.response.status === 500)
-        throw new Error("Server error. Please try again later.");
-    }
-    throw new Error("Something went wrong. Please try again.");
-  }
-}
-
-/**
- * Verify user email with token
- * @param {string} token - Email verification token
- * @returns {Promise} Promise resolving to success message
- */
-export async function verifyEmail(token) {
-  try {
-    const response = await axiosIns.get(`/auth/verify-email/${token}`);
-    return response.data;
-  } catch (error) {
-    if (error.response) {
-      if (error.response.status === 400)
-        throw new Error("Invalid or expired verification token.");
-      if (error.response.status === 500)
-        throw new Error("Server error. Please try again later.");
-    }
-    throw new Error("Something went wrong. Please try again.");
-  }
-}
-
-/**
- * Resend verification email
- * @param {string} email - User's email address
- * @returns {Promise} Promise resolving to success message
- */
-export async function resendVerificationEmail(email) {
-  try {
-    const response = await axiosIns.post("/auth/resend-verification", {
-      email,
-    });
-    return response.data;
-  } catch (error) {
-    if (error.response) {
-      if (error.response.status === 404)
-        throw new Error("No account found with this email address.");
-      if (error.response.status === 429)
-        throw new Error("Too many requests. Please try again later.");
-      if (error.response.status === 500)
-        throw new Error("Server error. Please try again later.");
-    }
-    throw new Error("Something went wrong. Please try again.");
-  }
-}
-
-/**
- * Change user password (when logged in)
- * @param {string} currentPassword - Current password
- * @param {string} newPassword - New password
- * @returns {Promise} Promise resolving to success message
- */
-export async function changePassword(currentPassword, newPassword) {
-  try {
-    const response = await axiosIns.post("/auth/change-password", {
-      currentPassword,
-      newPassword,
-    });
-    return response.data;
-  } catch (error) {
-    if (error.response) {
-      if (error.response.status === 400)
-        throw new Error("Current password is incorrect.");
-      if (error.response.status === 401)
-        throw new Error("You must be logged in to change your password.");
-      if (error.response.status === 500)
-        throw new Error("Server error. Please try again later.");
+    } else if (error.request) {
+      // Request was made but no response
+      console.error("No response received:", error.request);
+      throw new Error(
+        "No response from server. Please check your connection and try again."
+      );
     }
     throw new Error("Something went wrong. Please try again.");
   }

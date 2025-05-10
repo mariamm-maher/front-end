@@ -1,7 +1,9 @@
 import axios from "axios";
 
 const axiosIns = axios.create({
-  baseURL: "http://localhost:5252",
+  // If your app is already configured to use http://localhost:5252, make sure it's running
+  // If not, you might need to update this URL to match your backend
+  baseURL: "http://localhost:5252", // verify this is correct
   headers: {
     "Content-Type": "application/json",
   },

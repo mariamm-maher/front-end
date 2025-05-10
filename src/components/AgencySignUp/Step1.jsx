@@ -1,11 +1,7 @@
 import { motion } from "framer-motion";
 import { FiUser, FiPhone, FiMail } from "react-icons/fi";
-import { useSelector } from "react-redux";
 
-const Step1 = ({ handleChange }) => {
-  // Access form data from Redux store
-  const { formData } = useSelector((state) => state.agencyForm);
-
+const Step1 = ({ formData, handleChange }) => {
   return (
     <>
       <motion.div

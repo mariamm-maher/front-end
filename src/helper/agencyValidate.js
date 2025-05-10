@@ -15,6 +15,7 @@ export const validateStep = (step, formData) => {
     if (!formData.city.trim()) errors.city = "City is required";
   }
   if (step === 3) {
+    // Validate password in step 3
     if (!formData.password) errors.password = "Password is required";
     else if (formData.password.length < 8)
       errors.password = "Password must be at least 8 characters";
@@ -25,20 +26,7 @@ export const validateStep = (step, formData) => {
         errors.password =
           "Password must include uppercase letters, lowercase letters, numbers, and special characters";
     }
-  }
-
-  // Step 4 validation is optional (social media links)
-  if (step === 4) {
-    // Optional fields, no validation needed
-    // But if you want to validate URL formats:
-    if (
-      formData.website &&
-      !/^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-./?%&=]*)?$/.test(
-        formData.website
-      )
-    ) {
-      errors.website = "Please enter a valid website URL";
-    }
+    // No validation for profile photo as it's optional
   }
 
   return errors;

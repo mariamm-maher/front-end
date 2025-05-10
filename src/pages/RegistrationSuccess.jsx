@@ -78,7 +78,7 @@ const RegistrationSuccess = () => {
                 to="/"
                 className="py-3 px-6 rounded-xl font-medium text-white transition-all duration-300 flex items-center justify-center space-x-2 bg-white/10 hover:bg-white/20 border border-white/20"
               >
-                Return to Homepage
+                Return to Main Page
               </Link>
             </motion.div>
           </div>

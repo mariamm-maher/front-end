@@ -2,9 +2,10 @@ import { motion } from "framer-motion";
 import { FiUser, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import AnimatedBackground from "../components/Auth/background";
 import { Link } from "react-router-dom";
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 import toast from "react-hot-toast";
+import { testTokenDecode } from "../utils/tokenHelper";
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -12,7 +13,23 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
 
   // Use the AuthContext
-  const { login, isLoggingIn } = useContext(AuthContext);
+  const { login, isLoggingIn, token, user } = useContext(AuthContext);
+
+  // Debug helper for token
+  useEffect(() => {
+    if (token) {
+      console.log(
+        "Current token in login page:",
+        token.substring(0, 15) + "..."
+      );
+      const tokenTest = testTokenDecode(token);
+      console.log("Token test result:", tokenTest);
+    }
+
+    if (user) {
+      console.log("Current user in login page:", user);
+    }
+  }, [token, user]);
   const handleSubmit = (e) => {
     e.preventDefault();
 

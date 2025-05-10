@@ -3,7 +3,7 @@ import { createContext, useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import { loginUser } from "../services/AuthApi"; 
+import { loginUser } from "../services/AuthApi";
 
 // Create context in a separate declaration
 export const AuthContext = createContext();
@@ -28,11 +28,11 @@ export function AuthProvider({ children }) {
   // Check if token is valid and not expired
   const isTokenValid = useCallback((token) => {
     if (!token) return false;
-    
+
     try {
       const decoded = jwtDecode(token);
       const currentTime = Date.now() / 1000;
-      
+
       // Check if token is expired
       return decoded.exp > currentTime;
     } catch (error) {
@@ -49,18 +49,18 @@ export function AuthProvider({ children }) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to refresh token");
       }
-      
+
       const data = await response.json();
       setToken(data.token);
       localStorage.setItem("token", data.token);
-      
+
       return data.token;
     } catch (error) {
       console.error("Token refresh failed:", error);
@@ -68,23 +68,38 @@ export function AuthProvider({ children }) {
       return null;
     }
   }, [token, logout]);
-
   // Set up automatic token refresh
   useEffect(() => {
     if (!token) {
       setLoading(false);
       return;
     }
-    
     try {
       const decoded = jwtDecode(token);
+      console.log("Full decoded token:", decoded); // Log the entire decoded token
       const currentTime = Date.now() / 1000;
-      
+
       // If token is valid
       if (decoded.exp > currentTime) {
-        setUser(decoded);
+        // Ensure we have all the necessary properties from the token
+        if (!decoded.role) {
+          console.error("Token is missing role property:", decoded);
+          toast.error("Authentication error: Token missing role information");
+          logout();
+          return;
+        }
+
+        // Set user with complete token payload
+        setUser({
+          id: decoded.id,
+          role: decoded.role,
+          exp: decoded.exp,
+          // Include any other properties you need from the token
+        });
+
+        console.log("Setting user state with role:", decoded.role);
         setIsAuthenticated(true);
-        
+
         // Set up refresh timer - refresh 5 minutes before expiry
         const timeToRefresh = (decoded.exp - currentTime - 300) * 1000;
         if (timeToRefresh > 0) {
@@ -113,11 +128,26 @@ export function AuthProvider({ children }) {
         console.log("Login successful, setting token");
         setToken(data.token);
         localStorage.setItem("token", data.token);
-        
         // Decode token to get user data
         const decoded = jwtDecode(data.token);
-        console.log("Decoded token role:", decoded.role);
-        setUser(decoded);
+        console.log("Full decoded login token:", decoded);
+
+        // Verify the token contains the required fields
+        if (!decoded.role) {
+          console.error("Token is missing role property:", decoded);
+          toast.error("Authentication error: Invalid token format");
+          return;
+        }
+
+        // Set user with complete token payload
+        setUser({
+          id: decoded.id,
+          role: decoded.role,
+          exp: decoded.exp,
+          // Include any other properties you need from the token
+        });
+
+        console.log("Setting user after login with role:", decoded.role);
         setIsAuthenticated(true);
 
         toast.success("Login successful!", {
@@ -131,7 +161,7 @@ export function AuthProvider({ children }) {
           },
           icon: "🎉",
         });
-        
+
         // Navigate with a slight delay to ensure state is updated
         setTimeout(() => {
           if (decoded.role === "Tourist") {
@@ -180,7 +210,7 @@ export function AuthProvider({ children }) {
         user,
         isAuthenticated,
         loading,
-        refreshToken
+        refreshToken,
       }}
     >
       {children}

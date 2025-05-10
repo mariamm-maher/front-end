@@ -1,6 +1,4 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Provider } from "react-redux";
-import { store } from "./Store/store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { AuthProvider } from "./context/AuthContext";
@@ -20,7 +18,6 @@ import AboutUs from "./pages/AboutUs";
 import ContactUs from "./pages/ContactUs";
 import TripPage from "./pages/tripPage";
 import AboutAgency from "./pages/travelAgencypage";
-import ForgetPasswordPage from "./pages/ForgetPassword";
 import MainLayout from "./pages/MainLayout";
 import DestinationPage from "./pages/destinationPage";
 import ProfilePage from "./pages/profile";
@@ -48,84 +45,77 @@ const queryClient = new QueryClient();
 import { Toaster } from "react-hot-toast";
 function App() {
   return (
-    <Provider store={store}>
-      <QueryClientProvider client={queryClient}>
-        <Router>
-          <Toaster position="top-right" reverseOrder={false} />{" "}
-          <AuthProvider>
-            <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />
-            <Routes>
-              {/* Public Routes */}
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <Toaster position="top-right" reverseOrder={false} />
+        <AuthProvider>
+          <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />
+          <Routes>
+            {/* Public Routes */}
 
-              <Route element={<MainLayout />}>
-                <Route path="/home" element={<HomePage />} />
-                <Route path="/explore" element={<Explore />} />
-                <Route path="/destinations" element={<Destinations />} />
-                <Route path="/aboutUs" element={<AboutUs />} />
-                <Route path="/contactUs" element={<ContactUs />} />
-                <Route path="/trip" element={<TripPage />} />
-                <Route path="/travelAgency" element={<AboutAgency />} />
-                <Route path="/destinationPage" element={<DestinationPage />} />
+            <Route element={<MainLayout />}>
+              <Route path="/home" element={<HomePage />} />
+              <Route path="/explore" element={<Explore />} />
+              <Route path="/destinations" element={<Destinations />} />
+              <Route path="/aboutUs" element={<AboutUs />} />
+              <Route path="/contactUs" element={<ContactUs />} />
+              <Route path="/trip" element={<TripPage />} />
+              <Route path="/travelAgency" element={<AboutAgency />} />
+              <Route path="/destinationPage" element={<DestinationPage />} />
+            </Route>
+
+            <Route path="/" element={<WelcomePage />} />
+            <Route path="/login" element={<LoginPage />} />
+
+            <Route path="/signup-user" element={<SignupPage />} />
+            <Route path="/signup-agency" element={<TravelAgencySignUp />} />
+            <Route
+              path="/registration-success"
+              element={<RegistrationSuccess />}
+            />
+
+            {/* Protected Tourist Routes */}
+            <Route element={<RoleProtectedRoute allowedRoles={["Tourist"]} />}>
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/booking" element={<BookingPage />} />
+              <Route path="/ComplaintPage" element={<ComplaintPage />} />
+              <Route path="/review" element={<ReviewPrompt />} />
+            </Route>
+
+            {/* Protected Admin Dashboard Routes */}
+            <Route element={<RoleProtectedRoute allowedRoles={["Admin"]} />}>
+              <Route path="/admin" element={<AdminDashboard />}>
+                <Route index element={<DashBoard />} />
+                <Route path="main" element={<DashBoard />} />
+                <Route path="travelAgency" element={<AgencyManagement />} />
+                <Route path="account" element={<AccountManagement />} />
+                <Route path="category" element={<CategoriesManagement />} />
+                <Route path="booking" element={<BookingTransactions />} />
+                <Route path="support" element={<SupportRequests />} />
+                <Route path="complaint" element={<ComplaintsManagement />} />
               </Route>
+            </Route>
 
-              <Route path="/" element={<WelcomePage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/forget-password" element={<ForgetPasswordPage />} />
-              <Route path="/signup-user" element={<SignupPage />} />
-              <Route path="/signup-agency" element={<TravelAgencySignUp />} />
+            {/* Protected Travel Agency Dashboard Routes */}
+            <Route
+              element={<RoleProtectedRoute allowedRoles={["TravelAgency"]} />}
+            >
               <Route
-                path="/registration-success"
-                element={<RegistrationSuccess />}
-              />
-
-              {/* Protected Tourist Routes */}
-              <Route
-                element={<RoleProtectedRoute allowedRoles={["Tourist"]} />}
+                path="/travelAgencyDashboard"
+                element={<TravelAgencyDashboard />}
               >
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/booking" element={<BookingPage />} />
-                <Route path="/ComplaintPage" element={<ComplaintPage />} />
-                <Route path="/review" element={<ReviewPrompt />} />
+                <Route index element={<Main />} />
+                <Route path="main" element={<Main />} />
+                <Route path="tours" element={<TourManagementDashboard />} />
+                <Route path="users" element={<UserManagementDashboard />} />
+                <Route path="booking" element={<BookingRequestsDashboard />} />
               </Route>
-
-              {/* Protected Admin Dashboard Routes */}
-              <Route element={<RoleProtectedRoute allowedRoles={["Admin"]} />}>
-                <Route path="/admin" element={<AdminDashboard />}>
-                  <Route index element={<DashBoard />} />
-                  <Route path="main" element={<DashBoard />} />
-                  <Route path="travelAgency" element={<AgencyManagement />} />
-                  <Route path="account" element={<AccountManagement />} />
-                  <Route path="category" element={<CategoriesManagement />} />
-                  <Route path="booking" element={<BookingTransactions />} />
-                  <Route path="support" element={<SupportRequests />} />
-                  <Route path="complaint" element={<ComplaintsManagement />} />
-                </Route>
-              </Route>
-
-              {/* Protected Travel Agency Dashboard Routes */}
-              <Route
-                element={<RoleProtectedRoute allowedRoles={["TravelAgency"]} />}
-              >
-                <Route
-                  path="/travelAgencyDashboard"
-                  element={<TravelAgencyDashboard />}
-                >
-                  <Route index element={<Main />} />
-                  <Route path="main" element={<Main />} />
-                  <Route path="tours" element={<TourManagementDashboard />} />
-                  <Route path="users" element={<UserManagementDashboard />} />
-                  <Route
-                    path="booking"
-                    element={<BookingRequestsDashboard />}
-                  />
-                </Route>
-              </Route>
-              {/* <Route path="down" element={<DownloadSpinner />} /> */}
-            </Routes>
-          </AuthProvider>
-        </Router>
-      </QueryClientProvider>
-    </Provider>
+            </Route>
+            {/* <Route path="down" element={<DownloadSpinner />} /> */}
+          </Routes>
+        </AuthProvider>
+      </Router>
+    </QueryClientProvider>
   );
 }
 

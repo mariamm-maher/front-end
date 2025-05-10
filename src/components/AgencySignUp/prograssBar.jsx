@@ -1,8 +1,4 @@
-import { useSelector } from "react-redux";
-
-function ProgressBar({ totalSteps = 4 }) {
-  // Get currentStep directly from Redux store
-  const { currentStep } = useSelector((state) => state.agencyForm);
+function ProgressBar({ currentStep, totalSteps = 3 }) {
   const percentage = (currentStep / totalSteps) * 100;
 
   return (
