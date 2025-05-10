@@ -2,10 +2,10 @@ import { motion } from "framer-motion";
 import { FiUser, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import AnimatedBackground from "../components/Auth/background";
 import { Link } from "react-router-dom";
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import toast from "react-hot-toast";
-import { testTokenDecode } from "../utils/tokenHelper";
+
 import { displayAuthError } from "../utils/authUtils";
 
 const LoginPage = () => {
@@ -14,24 +14,9 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
 
   // Use the AuthContext
-  const { login, isLoggingIn, token, user } = useContext(AuthContext);
+  const { login, isLoggingIn } = useContext(AuthContext);
 
-  // Debug helper for token
-  useEffect(() => {
-    if (token) {
-      console.log(
-        "Current token in login page:",
-        token.substring(0, 15) + "..."
-      );
-      const tokenTest = testTokenDecode(token);
-      console.log("Token test result:", tokenTest);
-    }
-
-    if (user) {
-      console.log("Current user in login page:", user);
-    }
-  }, [token, user]);
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Validate inputs before submitting
@@ -42,16 +27,18 @@ const LoginPage = () => {
 
     console.log("Attempting login with:", email);
 
-    // Use the login function from context
-    login({
-      email,
-      password,
-    }).catch((error) => {
+    try {
+      // Use the login function from context which now returns a Promise
+      await login({
+        email,
+        password,
+      });
+      // Success case is handled by the context
+    } catch (error) {
+      console.error("Login failed:", error);
       // Use our utility function to display the appropriate error message
       displayAuthError(error, toast);
-    });
-
-    // No need to reset fields here as the page will redirect on successful login
+    }
   };
 
   return (

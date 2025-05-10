@@ -1,82 +1,85 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useContext } from "react";
-import { AuthContext } from "../context/AuthContext";
+import DownloadSpinner from "../components/shared/Downlaoding";
+import { jwtDecode } from "jwt-decode";
+
+/**
+ * Protected routes for the application
+ *
+ * IMPORTANT: As per project requirements (see AUTH_README.md),
+ * DO NOT check for token expiry in these components.
+ * The backend is responsible for rejecting expired tokens.
+ */
 
 // General protected route - requires authentication but no specific role
 const ProtectedRoute = () => {
-  const { isAuthenticated, loading } = useContext(AuthContext);
+  // Check for token directly
+  const token = localStorage.getItem("token");
 
-  if (loading) {
-    // You could return a loading spinner here
-    return (
-      <div className="h-screen flex items-center justify-center">
-        Loading...
-      </div>
-    );
+  if (!token) {
+    console.log("No token found, redirecting to login");
+    return <Navigate to="/login" replace />;
   }
 
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+  return <Outlet />;
 };
 
 // Role-specific protected route
 export const RoleProtectedRoute = ({ allowedRoles }) => {
-  const { user, isAuthenticated, loading } = useContext(AuthContext);
+  // Check for token directly
+  const token = localStorage.getItem("token");
 
-  if (loading) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        Loading...
-      </div>
-    );
-  }
-
-  // If not authenticated, redirect to login
-  if (!isAuthenticated) {
-    console.log("User not authenticated, redirecting to login");
+  if (!token) {
+    console.log("No token found, redirecting to login");
     return <Navigate to="/login" replace />;
   }
+  try {
+    // Verify token validity
+    const decoded = jwtDecode(token);
+    // Check if token has role information
+    if (!decoded.role) {
+      console.error("Token is missing role information:", decoded);
+      localStorage.removeItem("token");
+      return <Navigate to="/login" replace />;
+    }
 
-  // Check if user object exists and has a role property
-  if (!user || !user.role) {
-    console.error("User object is missing or has no role:", user);
-    // Clear potentially corrupted authentication state
+    console.log("Role check:", {
+      userRole: decoded.role,
+      allowedRoles,
+      isAllowed: allowedRoles.includes(decoded.role),
+    });
+
+    // If authenticated but not authorized for this role
+    if (!allowedRoles.includes(decoded.role)) {
+      console.log(
+        `User role ${decoded.role} not in allowed roles: [${allowedRoles.join(
+          ", "
+        )}]`
+      );
+
+      // Redirect to appropriate dashboard based on role
+      if (decoded.role === "Tourist") {
+        console.log("Redirecting Tourist to /home");
+        return <Navigate to="/home" replace />;
+      } else if (decoded.role === "TravelAgency") {
+        console.log("Redirecting TravelAgency to /travelAgencyDashboard");
+        return <Navigate to="/travelAgencyDashboard" replace />;
+      } else if (decoded.role === "Admin") {
+        console.log("Redirecting Admin to /admin");
+        return <Navigate to="/admin" replace />;
+      } else {
+        // Fallback for unknown roles
+        console.warn("Unknown role, redirecting to homepage:", decoded.role);
+        return <Navigate to="/" replace />;
+      }
+    }
+
+    // If authenticated and authorized, render the child routes
+    return <Outlet />;
+  } catch (error) {
+    console.error("Error decoding token:", error);
     localStorage.removeItem("token");
     return <Navigate to="/login" replace />;
   }
-
-  console.log("Role check:", {
-    userRole: user.role,
-    allowedRoles,
-    isAllowed: allowedRoles.includes(user.role),
-  });
-
-  // If authenticated but not authorized for this role
-  if (!allowedRoles.includes(user.role)) {
-    console.log(
-      `User role ${user.role} not in allowed roles: [${allowedRoles.join(
-        ", "
-      )}]`
-    );
-
-    // Redirect to appropriate dashboard based on role
-    if (user.userRole === "Tourist") {
-      console.log("Redirecting Tourist to /home");
-      return <Navigate to="/home" replace />;
-    } else if (user.userRole === "TravelAgency") {
-      console.log("Redirecting TravelAgency to /travelAgencyDashboard");
-      return <Navigate to="/travelAgencyDashboard" replace />;
-    } else if (user.userRole === "Admin") {
-      console.log("Redirecting Admin to /admin");
-      return <Navigate to="/admin" replace />;
-    } else {
-      // Fallback for unknown roles
-      console.warn("Unknown role, redirecting to homepage:", user.role);
-      return <Navigate to="/" replace />;
-    }
-  }
-
-  // If authenticated and authorized, render the child routes
-  return <Outlet />;
 };
 
 export default ProtectedRoute;

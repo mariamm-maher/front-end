@@ -30,7 +30,6 @@ import DashBoard from "./components/Admindashboard/main/main";
 import AgencyManagement from "./components/Admindashboard/travelagency/TravelAgencies";
 import AccountManagement from "./components/Admindashboard/accounts/accounts";
 import CategoriesManagement from "./components/Admindashboard/categories/categories";
-import BookingTransactions from "./components/Admindashboard/bookings/Bookings";
 import SupportRequests from "./components/Admindashboard/supportRequests/supportsRequests";
 import ComplaintsManagement from "./components/Admindashboard/complaint/complaint";
 
@@ -64,15 +63,19 @@ function App() {
               <Route path="/destinationPage" element={<DestinationPage />} />
             </Route>
 
-            <Route path="/" element={<WelcomePage />} />
+            {/* Public Routes - No Authentication Required */}
             <Route path="/login" element={<LoginPage />} />
-
             <Route path="/signup-user" element={<SignupPage />} />
             <Route path="/signup-agency" element={<TravelAgencySignUp />} />
             <Route
               path="/registration-success"
               element={<RegistrationSuccess />}
             />
+
+            {/* Protected Welcome Page - redirects to appropriate dashboard if authenticated */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/" element={<WelcomePage />} />
+            </Route>
 
             {/* Protected Tourist Routes */}
             <Route element={<RoleProtectedRoute allowedRoles={["Tourist"]} />}>
@@ -90,7 +93,7 @@ function App() {
                 <Route path="travelAgency" element={<AgencyManagement />} />
                 <Route path="account" element={<AccountManagement />} />
                 <Route path="category" element={<CategoriesManagement />} />
-                <Route path="booking" element={<BookingTransactions />} />
+
                 <Route path="support" element={<SupportRequests />} />
                 <Route path="complaint" element={<ComplaintsManagement />} />
               </Route>
