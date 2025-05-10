@@ -3,10 +3,8 @@ import { FiUser, FiPhone, FiMail } from "react-icons/fi";
 import { useSelector } from "react-redux";
 
 const Step1 = ({ handleChange }) => {
-  // Access form data and errors directly from Redux store
-  const { formData, validationErrors } = useSelector(
-    (state) => state.agencyForm
-  );
+  // Access form data from Redux store
+  const { formData } = useSelector((state) => state.agencyForm);
 
   return (
     <>
@@ -31,11 +29,6 @@ const Step1 = ({ handleChange }) => {
             required
           />
         </div>
-        {validationErrors.agencyName && (
-          <p className="text-red-400 text-sm mt-1">
-            {validationErrors.agencyName}
-          </p>
-        )}
       </motion.div>
 
       <motion.div
@@ -58,11 +51,6 @@ const Step1 = ({ handleChange }) => {
             required
           />
         </div>
-        {validationErrors.phoneNumber && (
-          <p className="text-red-400 text-sm mt-1">
-            {validationErrors.phoneNumber}
-          </p>
-        )}
       </motion.div>
 
       <motion.div
@@ -85,9 +73,6 @@ const Step1 = ({ handleChange }) => {
             required
           />
         </div>
-        {validationErrors.email && (
-          <p className="text-red-400 text-sm mt-1">{validationErrors.email}</p>
-        )}
       </motion.div>
     </>
   );

@@ -4,9 +4,7 @@ import { useSelector } from "react-redux";
 import { useState } from "react";
 
 const Step3 = ({ handleChange }) => {
-  const { formData, validationErrors } = useSelector(
-    (state) => state.agencyForm
-  );
+  const { formData } = useSelector((state) => state.agencyForm);
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -42,12 +40,6 @@ const Step3 = ({ handleChange }) => {
           )}
         </button>
       </div>
-
-      {validationErrors.password && (
-        <p className="text-red-400 text-sm mt-2 self-start max-w-md">
-          {validationErrors.password}
-        </p>
-      )}
     </motion.div>
   );
 };

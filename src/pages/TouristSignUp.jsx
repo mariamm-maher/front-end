@@ -10,10 +10,13 @@ import Step1 from "../components/TouristSignUp/StepOne";
 import Step2 from "../components/TouristSignUp/StepTwo";
 
 const SignupPage = () => {
-  const navigate = useNavigate(); // 👈 initialize navigate
+  const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const TouristSignupMutation = useMutation({
     mutationFn: signUpUser,
-    onSuccess: (data) => {
+    onSuccess: () => {
+      setIsSubmitting(false);
       toast.success("Signup successful! Please log in now.", {
         duration: 5000,
         position: "top-center",
@@ -25,9 +28,10 @@ const SignupPage = () => {
         },
         icon: "🎉",
       });
-      navigate("/login"); // 👈 after signup, navigate to login page
+      navigate("/login");
     },
     onError: (error) => {
+      setIsSubmitting(false);
       toast.error(error.message || "Signup failed.", {
         duration: 7000,
         position: "top-center",
@@ -64,6 +68,35 @@ const SignupPage = () => {
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Validate file type
+      const validTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+      ];
+      if (!validTypes.includes(file.type)) {
+        toast.error(
+          "Please select a valid image file (JPEG, PNG, GIF, or WebP).",
+          {
+            duration: 5000,
+            position: "top-center",
+          }
+        );
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        toast.error("Image size must be less than 5MB.", {
+          duration: 5000,
+          position: "top-center",
+        });
+        return;
+      }
+
       setFormData((prev) => ({
         ...prev,
         profilePhoto: file,
@@ -84,20 +117,26 @@ const SignupPage = () => {
   const handleBack = () => {
     setCurrentStep(1);
   };
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
 
-  const handleSubmit = () => {
-    console.log("Form Data:", formData);
-    const signupData = {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      password: formData.password,
-      gender: formData.gender,
-      nationality: formData.nationality,
-      profilePicture: formData.profilePhoto || "",
-    };
+    try {
+      const signupData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        gender: formData.gender,
+        nationality: formData.nationality,
+        profilePicture: formData.profilePhoto || "",
+      };
 
-    TouristSignupMutation.mutate(signupData);
+      // The image upload is now handled in the signUpUser function using Cloudinary
+      await TouristSignupMutation.mutateAsync(signupData);
+    } catch (error) {
+      console.error("Signup failed:", error);
+      setIsSubmitting(false);
+    }
   };
 
   return (

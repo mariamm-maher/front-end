@@ -1,6 +1,6 @@
 // Step2.jsx - Second step component (gender, nationality, photo)
 import { useRef } from "react";
-import { FiFlag, FiUsers, FiUpload, FiImage } from "react-icons/fi";
+import { FiFlag, FiUsers, FiUpload, FiImage, FiLoader } from "react-icons/fi";
 import { motion } from "framer-motion";
 
 const Step2 = ({
@@ -10,6 +10,7 @@ const Step2 = ({
   handlePhotoChange,
   onSubmit,
   onBack,
+  isLoading = false,
 }) => {
   const fileInputRef = useRef(null);
 
@@ -200,9 +201,17 @@ const Step2 = ({
           transition={{ delay: 0.45 }}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
+          disabled={isLoading}
           className="w-2/3 py-4 px-6 rounded-xl font-medium text-white bg-gradient-to-r from-[#1784ad] to-teal-500 hover:from-[#1784ad] hover:to-teal-400 shadow-lg hover:shadow-[#1784ad]/30 transition-all duration-300 flex items-center justify-center space-x-2"
         >
-          Sign Up
+          {isLoading ? (
+            <>
+              <FiLoader className="animate-spin mr-2" />
+              <span>Processing...</span>
+            </>
+          ) : (
+            <span>Sign Up</span>
+          )}
         </motion.button>
       </div>
     </form>

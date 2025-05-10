@@ -4,6 +4,7 @@ import AnimatedBackground from "../components/Auth/background";
 import { Link } from "react-router-dom";
 import { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
+import toast from "react-hot-toast";
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -12,10 +13,16 @@ const LoginPage = () => {
 
   // Use the AuthContext
   const { login, isLoggingIn } = useContext(AuthContext);
-
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // Validate inputs before submitting
+    if (!email || !password) {
+      toast.error("Please enter both email and password");
+      return;
+    }
+
+    console.log("Attempting login with:", email);
     // Use the login function from context
     login({
       email,

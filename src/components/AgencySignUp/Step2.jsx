@@ -11,9 +11,7 @@ const paymentOptions = [
 ];
 
 const Step2 = ({ handleChange }) => {
-  const { formData, validationErrors } = useSelector(
-    (state) => state.agencyForm
-  );
+  const { formData } = useSelector((state) => state.agencyForm);
 
   return (
     <>
@@ -37,12 +35,8 @@ const Step2 = ({ handleChange }) => {
             required
           />
         </div>
-        {validationErrors.city && (
-          <p className="text-red-400 text-sm mt-1">{validationErrors.city}</p>
-        )}
       </motion.div>
 
-      {/* Added Country Input */}
       <motion.div
         initial={{ x: -20, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
@@ -63,11 +57,6 @@ const Step2 = ({ handleChange }) => {
             required
           />
         </div>
-        {validationErrors.country && (
-          <p className="text-red-400 text-sm mt-1">
-            {validationErrors.country}
-          </p>
-        )}
       </motion.div>
 
       {/* <motion.div
@@ -90,11 +79,6 @@ const Step2 = ({ handleChange }) => {
             required
           />
         </div>
-        {validationErrors.address && (
-          <p className="text-red-400 text-sm mt-1">
-            {validationErrors.address}
-          </p>
-        )}
       </motion.div> */}
 
       <motion.div
