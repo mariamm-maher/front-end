@@ -11,10 +11,60 @@ import {
   FiChevronLeft,
   FiChevronRight,
 } from "react-icons/fi";
-import { Link, NavLink } from "react-router-dom";
-import { useState } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useState, useEffect, useContext } from "react";
+import { getUserProfile } from "../../services/userApi";
+import { AuthContext } from "../../context/AuthContext";
+
 const Sidebar = ({ sidebarOpen, toggleSidebar, collapsed, setCollapsed }) => {
   const [hovered, setHovered] = useState(false);
+  const [profileData, setProfileData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  // Fetch user profile data when component mounts
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchUserProfile() {
+      try {
+        // Check token first
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("No token found");
+        }
+
+        setIsLoading(true);
+        const data = await getUserProfile();
+        if (isMounted) {
+          setProfileData(data);
+          console.log("User profile loaded:", data);
+        }
+      } catch (error) {
+        console.error("Error loading user profile:", error);
+        // If there's an unauthorized error, redirect to login
+        if (
+          error.message.includes("Unauthorized") ||
+          error.message.includes("No token found") ||
+          error.message.includes("Token expired")
+        ) {
+          logout();
+          navigate("/login");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    fetchUserProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [logout, navigate]);
 
   const navigationLinks = [
     {
@@ -40,12 +90,6 @@ const Sidebar = ({ sidebarOpen, toggleSidebar, collapsed, setCollapsed }) => {
       label: "Categories",
       icon: <FiTag className="w-5 h-5" />,
       badge: 3,
-    },
-    {
-      to: "booking",
-      label: "Bookings",
-      icon: <FiCalendar className="w-5 h-5" />,
-      badge: 12,
     },
     {
       to: "support",
@@ -112,7 +156,6 @@ const Sidebar = ({ sidebarOpen, toggleSidebar, collapsed, setCollapsed }) => {
                 </button>
               </div>
             </div>
-
             {/* Navigation */}
             <nav className="flex-1 overflow-y-auto py-2 px-2">
               <ul className="space-y-3">
@@ -153,26 +196,54 @@ const Sidebar = ({ sidebarOpen, toggleSidebar, collapsed, setCollapsed }) => {
                   </li>
                 ))}
               </ul>
-            </nav>
-
+            </nav>{" "}
             {/* User Profile & Logout */}
             <div className="p-3 border-t border-gray-200 dark:border-gray-700">
               {!collapsed ? (
                 <>
+                  {" "}
                   <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-gray-700 flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium">
-                      AD
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-blue-100 dark:bg-gray-700 flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium">
+                      {isLoading ? (
+                        <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                      ) : profileData?.profilePicture ? (
+                        <img
+                          src={profileData.profilePicture}
+                          alt="Admin"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "";
+                            e.target.style.display = "none";
+                            e.target.parentNode.textContent =
+                              profileData?.firstName?.charAt(0) || "A";
+                          }}
+                        />
+                      ) : (
+                        profileData?.firstName?.charAt(0) || "A"
+                      )}
                     </div>
                     <div>
                       <p className="font-medium text-sm text-gray-900 dark:text-white">
-                        Admin User
+                        {isLoading
+                          ? "Loading..."
+                          : profileData?.firstName
+                          ? `${profileData.firstName} ${
+                              profileData.lastName || ""
+                            }`
+                          : "Admin User"}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        admin@travelease.com
+                        {isLoading
+                          ? ""
+                          : profileData?.email || "admin@travelease.com"}
                       </p>
                     </div>
                   </div>
-                  <button className="flex items-center w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                  <button
+                    onClick={logout}
+                    className="flex items-center w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  >
                     <FiLogOut className="w-5 h-5 mr-2" />
                     Logout
                   </button>
@@ -180,9 +251,16 @@ const Sidebar = ({ sidebarOpen, toggleSidebar, collapsed, setCollapsed }) => {
               ) : (
                 <div className="flex flex-col items-center">
                   <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-gray-700 flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium mb-3">
-                    AD
+                    {isLoading ? (
+                      <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      profileData?.firstName?.charAt(0) || "A"
+                    )}
                   </div>
-                  <button className="flex items-center justify-center w-full p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                  <button
+                    onClick={logout}
+                    className="flex items-center justify-center w-full p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  >
                     <FiLogOut className="w-5 h-5" />
                   </button>
                 </div>
