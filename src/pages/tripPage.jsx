@@ -1,14 +1,13 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { FiCalendar, FiUsers, FiHeart, FiShare2, FiStar } from "react-icons/fi";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getTour } from "../services/tourApi";
 import Hero from "../components/Trip/Hero";
 import TripOverview from "../components/Trip/TripOverView";
-import TripItinerary from "../components/Trip/TripItinerary";
 import TripReviews from "../components/Trip/tripReview";
 import { toast } from "react-hot-toast";
-
+import { motion } from "framer-motion";
 const TripPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -16,88 +15,10 @@ const TripPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false); // {
 
-  // Sample reviews data (will be replaced by API data when available)
-  const [reviews] = useState([
-    {
-      id: 1,
-      user: "Sarah Johnson",
-      avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-      rating: 5,
-      date: "2023-05-15",
-      comment:
-        "This trip exceeded all expectations! The villas were stunning and the activities perfectly balanced relaxation and adventure.",
-      images: [
-        "https://images.unsplash.com/photo-1566073771259-6a8506099945",
-        "https://images.unsplash.com/photo-1563911302283-d2bc129e7570",
-      ],
-    },
-    {
-      id: 2,
-      user: "Michael Chen",
-      avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-      rating: 4,
-      date: "2023-04-22",
-      comment:
-        "Wonderful experience overall. The guides were extremely knowledgeable. Only minor complaint was one hotel change that wasn't communicated earlier.",
-      images: [],
-    },
-    {
-      id: 3,
-      user: "Emma Rodriguez",
-      avatar: "https://randomuser.me/api/portraits/women/63.jpg",
-      rating: 5,
-      date: "2023-06-10",
-      comment:
-        "Absolutely magical experience! The sunrise hike was worth waking up early for. Would book again in a heartbeat.",
-      images: ["https://images.unsplash.com/photo-1560049025-1a2857f42f1d"],
-    },
-    {
-      id: 4,
-      user: "David Kim",
-      avatar: "https://randomuser.me/api/portraits/men/75.jpg",
-      rating: 4.5,
-      date: "2023-03-18",
-      comment:
-        "Great value for the price. The cooking class was a highlight - we've been making the recipes at home!",
-      images: [
-        "https://images.unsplash.com/photo-1566041510394-cf7c8fe21800",
-        "https://images.unsplash.com/photo-1563911302283-d2bc129e7570",
-        "https://images.unsplash.com/photo-1560049025-1a2857f42f1d",
-      ],
-    },
-    {
-      id: 5,
-      user: "Olivia Martinez",
-      avatar: "https://randomuser.me/api/portraits/women/28.jpg",
-      rating: 5,
-      date: "2023-07-05",
-      comment:
-        "Perfect honeymoon destination. The private beach access made us feel like royalty. Staff went above and beyond.",
-      images: [],
-    },
-  ]);
+  console.log(trip);
 
-  // Default values for missing fields
-  const defaultTrip = {
-    id: id,
-    title: "Loading Trip...",
-    image: "https://images.unsplash.com/photo-1518544866330-95b331ed9cd1",
-    mainimage: "https://images.unsplash.com/photo-1518544866330-95b331ed9cd1",
-    rating: 4.5,
-    location: "Loading...",
-    duration: "Loading...",
-    groupSize: "Loading...",
-    price: 0,
-    description: "Loading trip details...",
-    highlights: [],
-    itinerary: [],
-    inclusions: [],
-    exclusions: [],
-  };
-
-  // Fetch tour data based on the ID from the URL
   useEffect(() => {
     const fetchTourData = async () => {
       try {
@@ -105,33 +26,80 @@ const TripPage = () => {
         const tourData = await getTour(id);
         console.log("Fetched tour data:", tourData);
 
-        // Enhance the tour data with defaults for missing fields needed by the UI
+        // Extract tour object if response is in the expected format
+        const tourObject = tourData.tour || tourData;
+
+        // Enhance the tour data with only the fields needed by the UI
+        // and that exist in the actual API response
         const enhancedTourData = {
-          ...tourData,
+          ...tourObject,
+          id: tourObject.id,
+          title: tourObject.title || "Unnamed Tour",
+          description:
+            tourObject.description || "No description available for this tour.",
+          price: tourObject.price || 0,
+          location: tourObject.location || "Location not specified",
+          duration: tourObject.duration
+            ? `${tourObject.duration} days`
+            : "Duration not specified",
+          startDate:
+            tourObject.startDate || new Date().toISOString().split("T")[0],
+          endDate: tourObject.endDate || new Date().toISOString().split("T")[0],
+          // Using rate from API if available, otherwise fallback to a default
+          rating: tourObject.rate || 4.5, // Only include review count if we have reviews in the API response
+          reviewCount: tourObject.reviews?.$values?.length || 0,
+          // Use mainimage from API as primary image source
           image:
-            tourData.mainimage ||
-            tourData.image ||
+            tourObject.mainimage ||
             "https://images.unsplash.com/photo-1518544866330-95b331ed9cd1",
-          groupSize:
-            tourData.groupSize || tourData.maxGroupSize || "12 people max",
-          highlights: tourData.highlights || [
-            "Professional, English-speaking guide",
-            "All accommodations included",
-            "Explore unique local experiences",
-          ],
-          itinerary: tourData.itinerary || [
+          // Use availableSeats data directly from API
+          groupSize: tourObject.availableSeats
+            ? `${tourObject.availableSeats} people max`
+            : "Group size not specified",
+          // Only include these properties if they are actually present in the API
+          ...(tourObject.accomodation && {
+            accommodation: tourObject.accomodation,
+          }),
+          ...(tourObject.transportation && {
+            transportation: tourObject.transportation,
+          }), // Generate minimal fallbacks for data not provided by API
+          highlights: [
+            `${tourObject.category || "Tour"} experience in ${
+              tourObject.location || "amazing locations"
+            }`,
+            tourObject.accomodation
+              ? `${tourObject.accomodation} included`
+              : "Accommodation included",
+            tourObject.transportation
+              ? `${tourObject.transportation} provided`
+              : "Transportation provided",
+          ], // Pass the actual reviews object from the API, ensuring it's not null
+          reviews: tourObject.reviews || { $values: [] },
+
+          // Generate itinerary from startDate and endDate if not provided
+          itinerary: tourObject.itinerary || [
             {
               day: 1,
-              title: "Day 1",
-              description: "Start of your amazing journey...",
+              title: "Tour Start",
+              description: `Begin your journey in ${
+                tourObject.location || "your destination"
+              }.`,
             },
           ],
-          inclusions: tourData.inclusions || [
-            "Accommodation",
-            "Transportation",
-            "Tour guide",
+
+          // Generate inclusions based on actual API data
+          inclusions: [
+            tourObject.accomodation
+              ? `Accommodation: ${tourObject.accomodation}`
+              : "Accommodation included",
+            tourObject.transportation
+              ? `Transportation: ${tourObject.transportation}`
+              : "Transportation included",
+            "Guide services",
           ],
-          exclusions: tourData.exclusions || [
+
+          // Standard exclusions - these are common and don't need API data
+          exclusions: [
             "International flights",
             "Personal expenses",
             "Travel insurance",
@@ -152,7 +120,6 @@ const TripPage = () => {
         setLoading(false);
       }
     };
-
     if (id) {
       fetchTourData();
     }
@@ -167,46 +134,61 @@ const TripPage = () => {
     } else {
       toast.success("Removed from favorites!");
     }
-  };
-
-  // Handle booking the trip
+  }; // Handle booking the trip
   const handleBookNow = () => {
-    // Will be implemented when booking API is available
     if (trip) {
-      navigate(
-        `/booking?tourId=${trip.id}&tourName=${encodeURIComponent(trip.title)}`
+      // Check if there are available seats
+      if (trip.availableSeats === 0) {
+        toast.error("This trip is fully booked. No available seats.");
+        return;
+      }
+
+      console.log("Booking trip with data:", trip);
+
+      // Make sure we're passing a properly structured trip object
+      const bookingTrip = {
+        id: trip.id,
+        title: trip.title,
+        name: trip.title, // Include both formats for compatibility
+        mainimage: trip.image,
+        image: trip.image,
+        price: trip.price,
+        duration: trip.duration,
+        startDate: trip.startDate,
+        endDate: trip.endDate,
+        location: trip.location,
+        travelAgencyName: trip.travelAgencyName || trip.agency,
+        agency: trip.travelAgencyName || trip.agency,
+        description: trip.description,
+        availableSeats: trip.availableSeats,
+      };
+
+      console.log(
+        "Navigating to booking with prepared trip data:",
+        bookingTrip
       );
+
+      // Navigate to booking page with tour ID as parameter and trip data
+      navigate(`/booking/${trip.id}`, {
+        state: { trip: bookingTrip }, // Pass the trip object in state
+      });
     }
   };
 
-  // Handle sharing the trip
-  const handleShare = () => {
-    // Basic share functionality
-    if (navigator.share) {
-      navigator
-        .share({
-          title: trip ? trip.title : "Check out this amazing trip!",
-          text: trip
-            ? `Check out ${trip.title} on TravelGo!`
-            : "Check out this amazing trip on TravelGo!",
-          url: window.location.href,
-        })
-        .catch((error) => console.log("Error sharing:", error));
-    } else {
-      // Fallback for browsers that don't support the Web Share API
-      navigator.clipboard
-        .writeText(window.location.href)
-        .then(() => {
-          toast.success("Link copied to clipboard!");
-        })
-        .catch(() => {
-          toast.error("Failed to copy link!");
-        });
-    }
-  };
+  const displayTrip = trip || {
+    id: 0,
+    title: "Loading Trip...",
+    description: "Trip details are being loaded",
+    location: "Unknown location",
+    price: 0,
+    duration: "Not available",
+    rating: 0,
+    reviewCount: 0,
+    image: "https://images.unsplash.com/photo-1518544866330-95b331ed9cd1",
+    groupSize: "Not specified",
 
-  // Display either the loaded trip or the default trip if loading
-  const displayTrip = trip || defaultTrip;
+    itinerary: [],
+  };
 
   if (loading) {
     return (
@@ -268,10 +250,7 @@ const TripPage = () => {
                     size={20}
                   />
                 </button>
-                <button
-                  onClick={handleShare}
-                  className="p-3 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200"
-                >
+                <button className="p-3 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">
                   <FiShare2 size={20} />
                 </button>
               </div>
@@ -290,16 +269,7 @@ const TripPage = () => {
                 >
                   Overview
                 </button>
-                <button
-                  onClick={() => setActiveTab("itinerary")}
-                  className={`py-4 px-6 font-medium text-sm whitespace-nowrap ${
-                    activeTab === "itinerary"
-                      ? "border-b-2 border-[#1784ad] text-[#1784ad]"
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  Itinerary
-                </button>
+
                 <button
                   onClick={() => setActiveTab("reviews")}
                   className={`py-4 px-6 font-medium text-sm whitespace-nowrap ${
@@ -322,13 +292,20 @@ const TripPage = () => {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
               >
+                {" "}
                 {activeTab === "overview" && (
                   <TripOverview trip={displayTrip} />
                 )}
                 {activeTab === "itinerary" && (
                   <TripItinerary itinerary={displayTrip.itinerary} />
+                )}{" "}
+                {activeTab === "reviews" && (
+                  <TripReviews
+                    reviews={displayTrip.reviews || []}
+                    rating={displayTrip.rating}
+                    tourId={id}
+                  />
                 )}
-                {activeTab === "reviews" && <TripReviews reviews={reviews} />}
               </motion.div>
             </AnimatePresence>
           </div>
@@ -342,7 +319,6 @@ const TripPage = () => {
                 </h3>
                 <span className="text-sm text-gray-500">per person</span>
               </div>
-
               <div className="space-y-4 mb-6">
                 <div className="flex items-center gap-3">
                   <FiCalendar className="text-[#1784ad]" />
@@ -351,53 +327,18 @@ const TripPage = () => {
                     <p className="font-medium">{displayTrip.duration}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <FiUsers className="text-[#1784ad]" />
-                  <div>
-                    <p className="text-sm text-gray-600">Group Size</p>
-                    <p className="font-medium">{displayTrip.groupSize}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4 mb-6">
-                <h4 className="font-medium">Available Tour Dates</h4>
-
-                {/* Date selector - Placeholder for now */}
-                <div className="grid grid-cols-3 gap-2">
-                  <button className="px-2 py-3 border border-gray-300 rounded-lg text-sm hover:border-[#1784ad] hover:bg-blue-50">
-                    Jun 15
-                  </button>
-                  <button className="px-2 py-3 border border-gray-300 rounded-lg text-sm hover:border-[#1784ad] hover:bg-blue-50">
-                    Jul 10
-                  </button>
-                  <button className="px-2 py-3 border border-gray-300 rounded-lg text-sm hover:border-[#1784ad] hover:bg-blue-50">
-                    Aug 5
-                  </button>
-                  <button className="px-2 py-3 border border-gray-300 rounded-lg text-sm hover:border-[#1784ad] hover:bg-blue-50">
-                    Sep 20
-                  </button>
-                  <button className="px-2 py-3 border border-gray-300 rounded-lg text-sm hover:border-[#1784ad] hover:bg-blue-50">
-                    Oct 12
-                  </button>
-                  <button className="px-2 py-3 border border-gray-300 rounded-lg text-sm hover:border-[#1784ad] hover:bg-blue-50">
-                    Nov 8
-                  </button>
-                </div>
-              </div>
-
+              </div>{" "}
               <button
                 onClick={handleBookNow}
-                className="w-full py-3 bg-[#1784ad] hover:bg-[#146d8d] text-white font-medium rounded-lg transition-colors"
+                disabled={displayTrip.availableSeats === 0}
+                className={`w-full py-3 font-medium rounded-lg transition-colors ${
+                  displayTrip.availableSeats === 0
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-[#1784ad] hover:bg-[#146d8d] text-white"
+                }`}
               >
-                Book Now
+                {displayTrip.availableSeats === 0 ? "Fully Booked" : "Book Now"}
               </button>
-
-              <div className="text-center mt-4">
-                <p className="text-sm text-gray-500">
-                  No deposit required. Reserve now & pay later.
-                </p>
-              </div>
             </div>
           </div>
         </div>

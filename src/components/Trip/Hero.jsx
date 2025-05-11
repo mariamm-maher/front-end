@@ -1,10 +1,12 @@
 import { motion } from "framer-motion";
 import { FiMapPin, FiStar } from "react-icons/fi";
+
 function Hero({ trip }) {
+  console.log(trip);
   return (
     <div className="relative h-96 w-full">
       <img
-        src={trip.image}
+        src={trip.image || trip.mainimage}
         alt={trip.title}
         className="w-full h-full object-cover"
       />
@@ -19,14 +21,18 @@ function Hero({ trip }) {
           {trip.title}
         </motion.h1>
         <div className="flex items-center gap-4 text-white">
-          <div className="flex items-center">
-            <FiStar className="text-yellow-400 mr-1" />
-            <span>{trip.rating}</span>
-          </div>
-          <div className="flex items-center">
-            <FiMapPin className="mr-1" />
-            <span>{trip.location}</span>
-          </div>
+          {trip.rating && (
+            <div className="flex items-center">
+              <FiStar className="text-yellow-400 mr-1" />
+              <span>{trip.rating}</span>
+            </div>
+          )}
+          {trip.location && (
+            <div className="flex items-center">
+              <FiMapPin className="mr-1" />
+              <span>{trip.location}</span>
+            </div>
+          )}
         </div>
       </div>
     </div>

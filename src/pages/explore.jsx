@@ -47,14 +47,6 @@ function Explore() {
           // Nested array format
           console.log("Tour count (nested array):", response.tours.length);
           setTours(response.tours);
-        } else if (
-          response &&
-          response.tours &&
-          response.tours.$values === undefined
-        ) {
-          // Handle case where $values is missing but tours is an object
-          console.log("Tour response has tours object but no $values array");
-          setTours([]);
         } else {
           // Fallback for unexpected format
           console.warn("Unexpected API response structure:", response);

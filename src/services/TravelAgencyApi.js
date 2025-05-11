@@ -264,6 +264,54 @@ export async function getAllBookings() {
 }
 
 /**
+ * Get booking details by ID
+ * @param {number} id - Booking ID to retrieve
+ * @returns {Promise} Promise resolving to booking details
+ */
+export async function getBookingDetails(id) {
+  try {
+    const response = await axiosIns.get(`/travelAgency/getBooking/${id}`);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      if (error.response.status === 404) throw new Error("Booking not found.");
+      if (error.response.status === 403)
+        throw new Error(
+          "Access denied. You are not authorized to view this booking."
+        );
+      if (error.response.status === 500)
+        throw new Error("Server error. Please try again later.");
+    }
+    throw new Error("Something went wrong. Please try again.");
+  }
+}
+
+/**
+ * Update booking status
+ * @param {number} id - Booking ID to update
+ * @param {string} status - New status for the booking ("Confirmed", "Cancelled", "Completed")
+ * @returns {Promise} Promise resolving to updated booking data
+ */
+export async function updateBookingStatus(id, status) {
+  try {
+    const response = await axiosIns.put(`/travelAgency/updateBookingStatus/${id}`, { status });
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      if (error.response.status === 404) throw new Error("Booking not found.");
+      if (error.response.status === 400) throw new Error("Invalid status provided.");
+      if (error.response.status === 403)
+        throw new Error(
+          "Access denied. You are not authorized to update bookings."
+        );
+      if (error.response.status === 500)
+        throw new Error("Server error. Please try again later.");
+    }
+    throw new Error("Something went wrong. Please try again.");
+  }
+}
+
+/**
  * Get all available tour categories
  * @returns {Promise} Promise resolving to array of categories
  */

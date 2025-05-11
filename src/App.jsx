@@ -71,11 +71,12 @@ function App() {
             {/* Protected Welcome Page - redirects to appropriate dashboard if authenticated */}
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<WelcomePage />} />
-            </Route>
+            </Route>{" "}
             {/* Protected Tourist Routes */}
             <Route element={<RoleProtectedRoute allowedRoles={["Tourist"]} />}>
               <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/booking" element={<BookingPage />} />
+              {/* <Route path="/booking" element={<BookingPage />} /> */}
+              <Route path="/booking/:id" element={<BookingPage />} />
               <Route path="/ComplaintPage" element={<ComplaintPage />} />
               <Route path="/review" element={<ReviewPrompt />} />
             </Route>

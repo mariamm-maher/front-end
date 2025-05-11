@@ -64,7 +64,7 @@ export async function bookTour(tourId, bookingData) {
   } catch (error) {
     if (error.response) {
       if (error.response.status === 400)
-        throw new Error("Invalid booking data provided.");
+        throw new Error("Not enough seats available for booking.");
       if (error.response.status === 404) throw new Error("Tour not found.");
       if (error.response.status === 403)
         throw new Error("Access denied. You are not authorized to book tours.");
