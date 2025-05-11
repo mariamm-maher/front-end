@@ -4,7 +4,6 @@ import { useState } from "react";
 
 const TripReviews = ({ reviews, rating }) => {
   const [showAllReviews, setShowAllReviews] = useState(false);
-
   return (
     <div>
       <div className="flex justify-between items-center mb-6">

@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { FiStar } from "react-icons/fi";
-
 const ReviewCard = ({ review }) => {
   return (
     <motion.div

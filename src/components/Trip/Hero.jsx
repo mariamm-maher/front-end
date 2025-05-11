@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { FiMapPin, FiStar } from "react-icons/fi";
-
 function Hero({ trip }) {
   return (
     <div className="relative h-96 w-full">

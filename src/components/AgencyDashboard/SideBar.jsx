@@ -79,18 +79,6 @@ const Sidebar = ({ sidebarOpen, toggleSidebar, collapsed, setCollapsed }) => {
       icon: <FiBriefcase className="w-5 h-5" />,
       badge: null,
     },
-    // {
-    //   to: "availability",
-    //   label: "Trip Availability",
-    //   icon: <FiCalendar className="w-5 h-5" />,
-    //   badge: null,
-    // },
-    {
-      to: "users",
-      label: "Manage Users",
-      icon: <FiUsers className="w-5 h-5" />,
-      badge: 4, // just an example
-    },
     {
       to: "booking",
       label: "Booking Requests",

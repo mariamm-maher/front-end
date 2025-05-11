@@ -6,19 +6,30 @@ import {
   FiStar,
   FiArrowRight,
 } from "react-icons/fi";
+import { Link, useNavigate } from "react-router-dom";
 
 const Trip = ({ trip }) => {
+  const navigate = useNavigate();
+
+  const handleTripClick = () => {
+    navigate(`/trip/${trip.id}`);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow h-full flex flex-col"
+      onClick={handleTripClick}
+      className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow h-full flex flex-col cursor-pointer"
     >
       {/* Image Section */}
       <div className="relative h-40">
         <img
-          src={trip.mainimage || "https://via.placeholder.com/400x300?text=No+Image"}
+          src={
+            trip.mainimage ||
+            "https://via.placeholder.com/400x300?text=No+Image"
+          }
           alt={trip.title}
           className="w-full h-full object-cover"
         />
@@ -36,7 +47,6 @@ const Trip = ({ trip }) => {
         <p className="text-gray-600 text-sm mb-3 line-clamp-2">
           {trip.description}
         </p>
-
         <div className="space-y-2 text-sm mb-4">
           <div className="flex items-center text-gray-700">
             <FiMapPin className="mr-2 text-[#1784ad]" size={14} />
@@ -45,7 +55,7 @@ const Trip = ({ trip }) => {
           <div className="flex items-center text-gray-700">
             <FiCalendar className="mr-2 text-[#1784ad]" size={14} />
             <span>
-              {trip.startDate 
+              {trip.startDate
                 ? new Date(trip.startDate).toLocaleDateString("en-US", {
                     month: "short",
                     day: "numeric",
@@ -57,21 +67,25 @@ const Trip = ({ trip }) => {
             <FiClock className="mr-2 text-[#1784ad]" size={14} />
             <span>{trip.duration || `${trip.numberOfDays || 3} days`}</span>
           </div>
-        </div>
-
+        </div>{" "}
         <div className="mt-auto flex justify-between items-center pt-3 border-t border-gray-100">
           <div className="font-bold text-[#1784ad]">
             ${trip.price ? trip.price.toLocaleString() : "TBD"}
           </div>
-          <button className="bg-[#1784ad] hover:bg-[#147399] text-white px-3 py-1.5 rounded-lg text-sm flex items-center transition-colors">
-            <span>Book</span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/trip/${trip.id}`);
+            }}
+            className="bg-[#1784ad] hover:bg-[#147399] text-white px-3 py-1.5 rounded-lg text-sm flex items-center transition-colors"
+          >
+            <span>View Details</span>
             <FiArrowRight className="ml-1" size={14} />
           </button>
         </div>
       </div>
     </motion.div>
   );
-};
 };
 
 const TripList = ({ trips }) => {

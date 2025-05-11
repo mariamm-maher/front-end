@@ -30,22 +30,22 @@ export async function getTravelAgencyProfile() {
 export async function addTour(tourData) {
   try {
     let processedTourData = { ...tourData }; // If there are tour images, upload them to Cloudinary
-    if (tourData.images && Array.isArray(tourData.images)) {
+    if (tourData.photos && Array.isArray(tourData.photos)) {
       console.log(
-        `[Agency API] Uploading ${tourData.images.length} tour images to Cloudinary`
+        `[Agency API] Uploading ${tourData.photos.length} tour photos to Cloudinary`
       );
 
-      const imageUploadPromises = tourData.images.map((image, index) => {
+      const imageUploadPromises = tourData.photos.map((image, index) => {
         if (image instanceof File) {
           console.log(
-            `[Agency API] Tour image ${index + 1}: ${image.name}, Size: ${(
+            `[Agency API] Tour photo ${index + 1}: ${image.name}, Size: ${(
               image.size / 1024
             ).toFixed(2)} KB`
           );
           return uploadTourImage(image);
         }
         console.log(
-          `[Agency API] Tour image ${
+          `[Agency API] Tour photo ${
             index + 1
           } is already a URL: ${image.substring(0, 50)}...`
         );
@@ -54,18 +54,18 @@ export async function addTour(tourData) {
 
       // Wait for all images to be uploaded
       const imageUrls = await Promise.all(imageUploadPromises);
-      console.log(`[Agency API] All tour images uploaded. URLs:`, imageUrls);
-      processedTourData.images = imageUrls;
+      console.log(`[Agency API] All tour photos uploaded. URLs:`, imageUrls);
+      processedTourData.photos = imageUrls;
     }
 
     // If there's a main image/thumbnail
-    if (tourData.mainImage && tourData.mainImage instanceof File) {
+    if (tourData.mainpphoto && tourData.mainpphoto instanceof File) {
       console.log(
-        `[Agency API] Uploading main tour image: ${tourData.mainImage.name}`
+        `[Agency API] Uploading main tour photo: ${tourData.mainpphoto.name}`
       );
-      processedTourData.mainImage = await uploadTourImage(tourData.mainImage);
+      processedTourData.mainpphoto = await uploadTourImage(tourData.mainpphoto);
       console.log(
-        `[Agency API] Main tour image uploaded. URL: ${processedTourData.mainImage}`
+        `[Agency API] Main tour photo uploaded. URL: ${processedTourData.mainpphoto}`
       );
     }
     const response = await axiosIns.post(
@@ -74,8 +74,8 @@ export async function addTour(tourData) {
     );
     console.log(
       `[Agency API] Tour added successfully with ${
-        processedTourData.images?.length || 0
-      } images`
+        processedTourData.photos?.length || 0
+      } photos`
     );
     return response.data;
   } catch (error) {
@@ -162,40 +162,34 @@ export async function updateTour(id, tourData) {
           } is already a URL: ${image.substring(0, 50)}...`
         );
         return Promise.resolve(image); // If it's already a URL, keep it as is
-      });
-
-      // Wait for all new images to be uploaded
+      }); // Wait for all new images to be uploaded
       const newImageUrls = await Promise.all(imageUploadPromises);
       console.log(
         `[Agency API] All new tour images uploaded. URLs:`,
         newImageUrls
       );
 
-      // Combine existing images with new ones
-      const existingCount = tourData.existingImages?.length || 0;
+      // Combine existing photos with new ones
+      const existingCount = tourData.photos?.length || 0;
       console.log(
-        `[Agency API] Combining ${existingCount} existing images with ${newImageUrls.length} new images`
+        `[Agency API] Combining ${existingCount} existing photos with ${newImageUrls.length} new images`
       );
 
-      processedTourData.images = [
-        ...(tourData.existingImages || []),
-        ...newImageUrls,
-      ];
+      processedTourData.photos = [...(tourData.photos || []), ...newImageUrls];
 
       // Remove temporary properties
       delete processedTourData.newImages;
-      delete processedTourData.existingImages;
     } // If there's a new main image/thumbnail
     if (tourData.newMainImage && tourData.newMainImage instanceof File) {
       console.log(
         `[Agency API] Uploading new main tour image for tour ${id}: ${tourData.newMainImage.name}`
       );
-      processedTourData.mainImage = await uploadTourImage(
+      processedTourData.mainimage = await uploadTourImage(
         tourData.newMainImage,
         id
       );
       console.log(
-        `[Agency API] New main tour image uploaded. URL: ${processedTourData.mainImage}`
+        `[Agency API] New main tour image uploaded. URL: ${processedTourData.mainimage}`
       );
       delete processedTourData.newMainImage;
     }
@@ -261,6 +255,27 @@ export async function getAllBookings() {
       if (error.response.status === 403)
         throw new Error(
           "Access denied. You are not authorized to view bookings."
+        );
+      if (error.response.status === 500)
+        throw new Error("Server error. Please try again later.");
+    }
+    throw new Error("Something went wrong. Please try again.");
+  }
+}
+
+/**
+ * Get all available tour categories
+ * @returns {Promise} Promise resolving to array of categories
+ */
+export async function getAllCategories() {
+  try {
+    const response = await axiosIns.get("/travelAgency/getAllCategories");
+    return response.data.$values;
+  } catch (error) {
+    if (error.response) {
+      if (error.response.status === 403)
+        throw new Error(
+          "Access denied. You are not authorized to view categories."
         );
       if (error.response.status === 500)
         throw new Error("Server error. Please try again later.");

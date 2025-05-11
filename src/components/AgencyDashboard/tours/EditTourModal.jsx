@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { addTour, getAllCategories } from "../../../services/TravelAgencyApi";
+import {
+  updateTour,
+  getAllCategories,
+} from "../../../services/TravelAgencyApi";
 import { FiX, FiUpload, FiCalendar } from "react-icons/fi";
 import toast from "react-hot-toast";
 
-const AddTourModal = ({ isOpen, onClose, onSuccess }) => {
+const EditTourModal = ({ isOpen, onClose, onSuccess, tour }) => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -25,6 +28,14 @@ const AddTourModal = ({ isOpen, onClose, onSuccess }) => {
   const [mainImagePreview, setMainImagePreview] = useState("");
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [existingPhotos, setExistingPhotos] = useState([]);
+
+  // Format ISO date to YYYY-MM-DD for input elements
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toISOString().split("T")[0];
+  };
 
   // Fetch categories when component mounts
   useEffect(() => {
@@ -52,6 +63,41 @@ const AddTourModal = ({ isOpen, onClose, onSuccess }) => {
     }
   }, [isOpen]);
 
+  // Set form data when tour prop changes
+  useEffect(() => {
+    if (tour && isOpen) {
+      // Initialize existing photos if available
+      let photos = [];
+      if (tour.photos && tour.photos.$values) {
+        photos = tour.photos.$values;
+        setExistingPhotos(photos);
+
+        // Create preview URLs for existing photos
+        const previews = photos.map((photo) => photo);
+        setPreviewImages(previews);
+      }
+
+      // Initialize main image if available
+      if (tour.mainimage) {
+        setMainImagePreview(tour.mainimage);
+      } // Set form data with tour data
+      setFormData({
+        title: tour.title || "",
+        description: tour.description || "",
+        categoryName: tour.category || "", // Using category from API
+        price: tour.price || 0,
+        location: tour.location || "",
+        startDate: formatDateForInput(tour.startDate) || "",
+        endDate: formatDateForInput(tour.endDate) || "",
+        availableSeats: tour.availableSeats || 0,
+        transportation: tour.transportation || "",
+        accomodation: tour.accomodation || "",
+        photos: photos,
+        mainpphoto: tour.mainimage || null, // Using mainimage from API
+      });
+    }
+  }, [tour, isOpen]);
+
   // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
@@ -71,6 +117,7 @@ const AddTourModal = ({ isOpen, onClose, onSuccess }) => {
       });
       setPreviewImages([]);
       setMainImagePreview("");
+      setExistingPhotos([]);
     }
   }, [isOpen]);
 
@@ -83,11 +130,12 @@ const AddTourModal = ({ isOpen, onClose, onSuccess }) => {
       setFormData({ ...formData, [name]: value });
     }
   };
+
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     setFormData({ ...formData, photos: [...formData.photos, ...files] });
 
-    // Create preview URLs
+    // Create preview URLs for new files
     const newPreviews = files.map((file) => URL.createObjectURL(file));
     setPreviewImages([...previewImages, ...newPreviews]);
   };
@@ -99,6 +147,7 @@ const AddTourModal = ({ isOpen, onClose, onSuccess }) => {
       setMainImagePreview(URL.createObjectURL(file));
     }
   };
+
   const removeImage = (index) => {
     const newImages = [...formData.photos];
     newImages.splice(index, 1);
@@ -106,54 +155,122 @@ const AddTourModal = ({ isOpen, onClose, onSuccess }) => {
 
     // Also update previews
     const newPreviews = [...previewImages];
-    URL.revokeObjectURL(newPreviews[index]); // Free memory
+    // Only revoke URL if it's a blob URL (for new images)
+    if (
+      typeof newPreviews[index] === "string" &&
+      newPreviews[index].startsWith("blob:")
+    ) {
+      URL.revokeObjectURL(newPreviews[index]); // Free memory
+    }
     newPreviews.splice(index, 1);
     setPreviewImages(newPreviews);
   };
 
   const clearMainImage = () => {
     setFormData({ ...formData, mainpphoto: null });
-    if (mainImagePreview) {
+    if (mainImagePreview && !mainImagePreview.startsWith("http")) {
       URL.revokeObjectURL(mainImagePreview);
-      setMainImagePreview("");
     }
+    setMainImagePreview("");
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       setIsLoading(true);
 
-      // Format data to match API requirements
+      // Format data to match API requirements based on the exact model
       const processedData = {
-        ...formData,
+        id: tour.id,
+        title: formData.title,
+        description: formData.description,
         price: parseFloat(formData.price),
-        availableSeats: parseInt(formData.availableSeats, 10),
-        // Convert dates to ISO format
+        location: formData.location,
         startDate: formData.startDate
           ? new Date(formData.startDate).toISOString()
           : "",
         endDate: formData.endDate
           ? new Date(formData.endDate).toISOString()
           : "",
+        availableSeats: parseInt(formData.availableSeats, 10),
+        transportation: formData.transportation,
+        accomodation: formData.accomodation,
+        categoryName: formData.categoryName, // Keep as categoryName
       };
 
-      const result = await addTour(processedData);
-      toast.success("Tour added successfully!");
-      onSuccess(result);
+      // Handle main image
+      if (formData.mainpphoto instanceof File) {
+        // If it's a new file upload, special handling is needed
+        processedData.newMainImage = formData.mainpphoto;
+      } else if (typeof formData.mainpphoto === "string") {
+        // Keep existing mainimage as is (lowercase i, matching API model)
+        processedData.mainimage = formData.mainpphoto;
+      }
+
+      // Handle photos - split between existing URLs and new File objects
+      const existingImageUrls = formData.photos.filter(
+        (p) => typeof p === "string"
+      );
+      const newImageFiles = formData.photos.filter((p) => p instanceof File);
+
+      if (newImageFiles.length > 0) {
+        // If there are new images to upload, send them separately
+        processedData.newImages = newImageFiles;
+      }
+
+      // Always send existing photos array
+      processedData.photos = existingImageUrls;
+
+      // Add debug logging
+      console.log("Sending update data:", {
+        ...processedData,
+        newImages: processedData.newImages ? processedData.newImages.length : 0,
+        photos: processedData.photos ? processedData.photos.length : 0,
+      });
+
+      const response = await updateTour(tour.id, processedData);
+      toast.success("Tour updated successfully!");
+      onSuccess(response);
       onClose();
     } catch (error) {
-      console.error("Error adding tour:", error);
-      toast.error(error.message || "Failed to add tour. Please try again.");
+      console.error("Error updating tour:", error);
+
+      // Enhanced error logging for better diagnosis
+      if (error.response) {
+        console.error(
+          "Error response:",
+          error.response.status,
+          error.response.data
+        );
+        // Show more detailed error message if available
+        const errorMessage =
+          error.response.data?.message ||
+          error.message ||
+          "Failed to update tour. Please try again.";
+        toast.error(errorMessage);
+      } else {
+        toast.error(
+          error.message || "Failed to update tour. Please try again."
+        );
+      }
     } finally {
       setIsLoading(false);
     }
   };
+
   // Clean up previews when component unmounts
   useEffect(() => {
     return () => {
-      previewImages.forEach((preview) => URL.revokeObjectURL(preview));
-      if (mainImagePreview) URL.revokeObjectURL(mainImagePreview);
+      // Only clean up blob URLs (new images), not existing image URLs
+      previewImages.forEach((preview) => {
+        if (typeof preview === "string" && preview.startsWith("blob:")) {
+          URL.revokeObjectURL(preview);
+        }
+      });
+      if (mainImagePreview && mainImagePreview.startsWith("blob:")) {
+        URL.revokeObjectURL(mainImagePreview);
+      }
     };
   }, [previewImages, mainImagePreview]);
 
@@ -182,7 +299,7 @@ const AddTourModal = ({ isOpen, onClose, onSuccess }) => {
               <div className="w-full max-w-3xl bg-white rounded-xl shadow-2xl">
                 <div className="flex justify-between items-center px-6 py-4 border-b">
                   <h2 className="text-xl font-semibold text-gray-800">
-                    Add New Tour
+                    Edit Tour: {tour?.title}
                   </h2>
                   <button
                     onClick={onClose}
@@ -212,7 +329,6 @@ const AddTourModal = ({ isOpen, onClose, onSuccess }) => {
 
                     {/* Category & Price */}
                     <div>
-                      {" "}
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Category*
                       </label>
@@ -448,7 +564,7 @@ const AddTourModal = ({ isOpen, onClose, onSuccess }) => {
                       {previewImages.length > 0 && (
                         <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                           {previewImages.map((preview, index) => (
-                            <div key={preview} className="relative">
+                            <div key={index} className="relative">
                               <img
                                 src={preview}
                                 alt={`Preview ${index + 1}`}
@@ -485,7 +601,7 @@ const AddTourModal = ({ isOpen, onClose, onSuccess }) => {
                       }`}
                       disabled={isLoading}
                     >
-                      {isLoading ? "Adding Tour..." : "Add Tour"}
+                      {isLoading ? "Updating Tour..." : "Update Tour"}
                     </button>
                   </div>
                 </form>
@@ -498,4 +614,4 @@ const AddTourModal = ({ isOpen, onClose, onSuccess }) => {
   );
 };
 
-export default AddTourModal;
+export default EditTourModal;

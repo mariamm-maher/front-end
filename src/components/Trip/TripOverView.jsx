@@ -1,11 +1,9 @@
 import { FiCalendar, FiUsers } from "react-icons/fi";
-
 const TripOverview = ({ trip }) => {
   return (
     <div>
       <h2 className="text-2xl font-bold text-gray-800 mb-4">Trip Overview</h2>
       <p className="text-gray-600 mb-6">{trip.description}</p>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="bg-white p-6 rounded-xl shadow-sm">
           <h3 className="font-bold text-gray-800 mb-4">Trip Details</h3>

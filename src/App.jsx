@@ -37,7 +37,6 @@ import ComplaintsManagement from "./components/Admindashboard/complaint/complain
 import TravelAgencyDashboard from "./pages/AgencyDashboard";
 import Main from "./components/AgencyDashboard/main/main";
 import TourManagementDashboard from "./components/AgencyDashboard/tours/Tours";
-import UserManagementDashboard from "./components/AgencyDashboard/Users/users";
 import BookingRequestsDashboard from "./components/AgencyDashboard/bookings/Bookings";
 
 const queryClient = new QueryClient();
@@ -50,19 +49,17 @@ function App() {
         <AuthProvider>
           <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />
           <Routes>
-            {/* Public Routes */}
-
+            {/* Public Routes */}{" "}
             <Route element={<MainLayout />}>
               <Route path="/home" element={<HomePage />} />
               <Route path="/explore" element={<Explore />} />
               <Route path="/destinations" element={<Destinations />} />
               <Route path="/aboutUs" element={<AboutUs />} />
               <Route path="/contactUs" element={<ContactUs />} />
-              <Route path="/trip" element={<TripPage />} />
+              <Route path="/trip/:id" element={<TripPage />} />
               <Route path="/travelAgency" element={<AboutAgency />} />
               <Route path="/destinationPage" element={<DestinationPage />} />
             </Route>
-
             {/* Public Routes - No Authentication Required */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup-user" element={<SignupPage />} />
@@ -71,12 +68,10 @@ function App() {
               path="/registration-success"
               element={<RegistrationSuccess />}
             />
-
             {/* Protected Welcome Page - redirects to appropriate dashboard if authenticated */}
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<WelcomePage />} />
             </Route>
-
             {/* Protected Tourist Routes */}
             <Route element={<RoleProtectedRoute allowedRoles={["Tourist"]} />}>
               <Route path="/profile" element={<ProfilePage />} />
@@ -84,7 +79,6 @@ function App() {
               <Route path="/ComplaintPage" element={<ComplaintPage />} />
               <Route path="/review" element={<ReviewPrompt />} />
             </Route>
-
             {/* Protected Admin Dashboard Routes */}
             <Route element={<RoleProtectedRoute allowedRoles={["Admin"]} />}>
               <Route path="/admin" element={<AdminDashboard />}>
@@ -98,7 +92,6 @@ function App() {
                 <Route path="complaint" element={<ComplaintsManagement />} />
               </Route>
             </Route>
-
             {/* Protected Travel Agency Dashboard Routes */}
             <Route
               element={<RoleProtectedRoute allowedRoles={["TravelAgency"]} />}
@@ -110,7 +103,7 @@ function App() {
                 <Route index element={<Main />} />
                 <Route path="main" element={<Main />} />
                 <Route path="tours" element={<TourManagementDashboard />} />
-                <Route path="users" element={<UserManagementDashboard />} />
+
                 <Route path="booking" element={<BookingRequestsDashboard />} />
               </Route>
             </Route>

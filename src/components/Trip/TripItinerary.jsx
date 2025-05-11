@@ -17,5 +17,4 @@ const TripItinerary = ({ itinerary }) => {
     </div>
   );
 };
-
 export default TripItinerary;
