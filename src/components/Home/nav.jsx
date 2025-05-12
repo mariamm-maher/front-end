@@ -42,8 +42,8 @@ const NavBar = () => {
     try {
       setIsLoading(true);
       const data = await getUserProfile();
-      setProfileData(data.value);
-      console.log("User profile loaded:", data.value);
+      setProfileData(data);
+      console.log("User profile loaded:", data);
     } catch (error) {
       console.error("Error loading user profile:", error);
     } finally {
